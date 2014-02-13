@@ -49,7 +49,7 @@ app = {
 		for (i; i<len; i++){
 			labels = features[i].properties.Label;
 			coordinates = features[i].geometry.coordinates[0];
-			// variable for db query
+			// *** variable for db query, this will be dynamic later ***
 			app.target = "321";
 
 			// query features by zone id
@@ -94,16 +94,16 @@ app = {
 	},
 
 	initGeoJson : function(n) {
-        console.log(app.esZones.options);
-        app.map.removeLayer(app.esZones);
-        if (n != "") {
-            sn = n;
-            console.log(sn);
-            geojson = L.geoJson(app.data, {
-                style: app.style
-            }).addTo(app.map);
-        }
-    },
+	    console.log(app.esZones.options);
+	    app.map.removeLayer(app.esZones);
+	    if (n != "") {
+	        sn = n;
+	        console.log(sn);
+	        geojson = L.geoJson(app.data, {
+	            style: app.style
+	        }).addTo(app.map);
+	    }
+	},
 
     style : function(feature) {
         if (app.target === feature.properties.Label) {
