@@ -1,83 +1,137 @@
-//given a school zone id, zoom and center map to that school zone polygon's bounding box
+app = {
+	map : null,
+	renderMap : function(){
 
-// init map with mapbox's tiles
-var map = L.mapbox.map('map', 'chenrick.map-3gzk4pem', {
-	maxBounds: new L.LatLngBounds([40.4378,-74.3342], [40.9635,-73.6008]),
-	minZoom: 12,
-	maxZoom: 16
-})
-  .setView([40.6949,-73.9558], 12); 
+		var config = {
+			mapBoxBaseLayer: 'chenrick.map-3gzk4pem',
+			maxBounds: new L.LatLngBounds([40.4378,-74.3342], [40.9635,-73.6008]),
+			minZoom: 12,
+			maxZoom: 16,
+			initZoom: 12,
+			initLatLng: new L.LatLng(40.6949,-73.9558),
+			zoomControl: true
+		}
+		// init map
+		this.map = L.mapbox.map('map', config.mapBoxBaseLayer, config);
+		// set init map center and zoom level
+		this.map.setView(config.initLatLng, config.initZoom);		
+		//disable drag and zoom handlers
+		this.map.dragging.disable();
+		this.map.touchZoom.disable();
+		this.map.doubleClickZoom.disable();
+		this.map.scrollWheelZoom.disable();
+		// disable tap handler, if present.
+		if (this.map.tap) this.map.tap.disable();		
+	},
 
-// load GeoJSON for elementary school zones
-$.getJSON('./ES_Zones_2013-2014.geojson', function(data){
-	console.log('geojson school zone data loaded: ', data);
+	fetchData: function(){
+		var features,
+			zoneStyle,
+			esZones,
+			features,
+			len,
+			i,
+			labels,
+			coordinates,
+			target,
+			hStyle,
+			dStyle,
+			styleData;
 
-	// styles for data:
-	var zoneStyle = {
-	    "color": "#ff7800",
+
+		$.getJSON('./ES_Zones_2013-2014.geojson', function(data){
+			console.log('./ES_Zones_2013-2014.geojson: ', data);
+
+			esZones = L.geoJson().addTo(app.map);
+			//esZones = L.geoJson(data, { style: app.dStyle }).addTo(app.map);
+
+			features = data.features;
+			len = features.length;
+			i=0;
+
+			// loop through school zone geojson features
+			for (i; i<len; i++){
+				labels = features[i].properties.Label;
+				coordinates = features[i].geometry.coordinates[0];
+				// variable for db query
+				target = "305";
+
+				// query features by zone id
+				if (labels === target) {
+					// console.log("i: ", i);
+					// console.log("PS305 coordinates[0]: ", coordinates);
+
+					styleData = function(feature){
+						switch(labels) {
+							case target: return app.hStyle;
+							case !target: return app.dStyle;
+							default: return app.dStyle;
+						}
+					},
+
+					esZones.addData(data);
+					esZones.setStyle(styleData());
+
+					// grab bounding box coordinates
+					var right = Math.max.apply(Math, coordinates.map(function(k) {
+							return k[0];
+						})),
+
+						left = Math.min.apply(Math, coordinates.map(function(k){
+							return k[0];
+						})),
+
+						top = Math.max.apply(Math, coordinates.map(function(k){
+							return k[1];
+						})),
+
+						bottom = Math.min.apply(Math, coordinates.map(function(k){
+							return k[1];
+						}));
+
+					// set arrarys for lower left and upper right 
+					var southWest = [bottom, left],
+						northEast = [top, right];
+
+					// debug
+					console.log('left: ', left, ' top: ', top, ' right: ', right, ' bottom: ', bottom);
+					console.log('southWest: ', southWest, ' northEast: ', northEast);
+
+					// zoom to bounding box
+					app.zoomToLayer(southWest, northEast);
+				}
+			}
+		});
+	},
+
+	zoomToLayer : function(sw, ne) {
+		app.map.fitBounds([sw, ne], { padding: [10,10] });
+	},
+
+	hStyle : {
+	    "color": "#0000ff",
 	    "weight": 1,
 	    "opacity": 0.65
-	};
+	},
 
-	// add geojson to map
-	L.geoJson(data, { style: zoneStyle }).addTo(map);
+	dStyle: {
+	    "color": "#ff0000",
+	    "weight": 1,
+	    "opacity": 0.65
+	},
 
-	// function to zoom to the bounds of the selected feature
-	var zoomToLayer = function(southWest, northEast){
-		//console.log(southWest, northEast)
-		map.fitBounds([southWest, northEast]);
+	// styleData : function(feature){
+	// 	switch(labels) {
+	// 		case target: return app.hStyle;
+	// 		default: app.dStyle;
+	// 	}
+	// },
+
+	init : function(){
+		app.renderMap();
+		app.fetchData();
 	}
 
-	// get lat lon bounding box of selected zone
-	var features = data.features,
-		len = features.length,
-		i = 0;
+} // end app
 
-	// loop through features
-	for (i; i<len; i++){
-		var labels = features[i].properties.Label
-		var coordinates = features[i].geometry.coordinates
-
-		//console.log('zone labels: ', labels);
-		//console.log('coordinates: ', coordinates);
-
-		// Query zone by id
-		if (labels === "305") {
-			console.log("PS3 coordinates: ", coordinates);
-
-			console.log(coordinates[0]);
-
-			var newCoordinates = coordinates[0]
-
-			// grab bounding box coordinates
-			var right = Math.max.apply(Math, newCoordinates.map(function(k) {
-					    return k[0];
-					})),
-
-				left = Math.min.apply(Math, newCoordinates.map(function(k){
-					return k[0];
-				})),
-
-				top = Math.max.apply(Math, newCoordinates.map(function(k){
-					return k[1];
-				})),
-
-				bottom = Math.min.apply(Math, newCoordinates.map(function(k){
-					return k[1];
-				}));
-
-			// set arrarys for lower left and upper right 
-			var southWest = [bottom, left],
-				northEast = [top, right];
-
-			// debug
-			console.log('left: ', left, ' top: ', top, ' right: ', right, ' bottom: ', bottom);
-			console.log('southWest: ', southWest, ' northEast: ', northEast);
-
-			// zoom to bounding box
-			zoomToLayer(southWest, northEast);
-		}
-
-	}
-
-});
+window.onload = app.init;
