@@ -13,7 +13,7 @@ app = {
 			maxZoom: 16,
 			initZoom: 12,
 			initLatLng: new L.LatLng(40.6949,-73.9558),
-			zoomControl: true
+			zoomControl: false
 		}
 		// init map
 		this.map = L.mapbox.map('map', config.mapBoxBaseLayer, config);
@@ -50,17 +50,17 @@ app = {
 			labels = features[i].properties.Label;
 			coordinates = features[i].geometry.coordinates[0];
 			// variable for db query
-			app.target = "305";
+			app.target = "321";
 
 			// query features by zone id
 			if (labels === app.target) {
-				// console.log("i: ", i);
+				console.log("i: ", i);
 				// console.log("PS305 coordinates[0]: ", coordinates);
 
 				// add and style esZones
 				app.esZones = L.geoJson(app.data, {style: app.dStyle}).addTo(app.map);
 				app.initGeoJson(app.target);
-				// app.esZones.setStyle(styleData());
+				//app.fitBounds();
 
 				// grab bounding box coordinates
 				var right = Math.max.apply(Math, coordinates.map(function(k) {
@@ -107,24 +107,10 @@ app = {
 
     style : function(feature) {
         if (app.target === feature.properties.Label) {
-            return {
-                weight: 1,
-                opacity: 1,
-                color: 'white',
-                dashArray: '3, 5',
-                fillOpacity: 0.3,
-                fillColor: '#ff0000'
-            };
+            return app.hStyle;
             
         } else {
-            return {
-                weight: 1,
-                opacity: 1,
-                color: 'white',
-                dashArray: '3, 5',
-                fillOpacity: 0.3,
-                fillColor: '#666666'
-            };
+            return app.dStyle;
         }
     },
 
@@ -132,22 +118,28 @@ app = {
 		app.map.fitBounds([sw, ne], { padding: [10,10] });
 	},
 
+	fitBounds: function(geojson){
+		var bounds = geojson.getBounds();
+		console.log('bounds: ', bounds);
+		app.map.fitBounds(bounds, { padding: [10,10] });
+	},
+
 	hStyle : {
-	    color: "#0000ff",
+	    color: "#666666",
 	    weight: 1,
 	    opacity: 1,
-	    dashArray: "1",
+	    dashArray: "3, 7",
 	    fillOpacity: 0.3,
-	    fillColor: "#0000ff"
+	    fillColor: "#fce305"
 	},
 
 	dStyle: {
 		weight: 1,
-	    color: "white",
+	    color: "#666666",
 	    opacity: 1,
-	    dashArray: "1",
-	    fillOpacity: 0.3,
-	    fillColor: '#666666'
+	    dashArray: "3 ,7",
+	    fillOpacity: 0.1,
+	    fillColor: '#0000ff'
 	},
 
 	init : function(){
@@ -155,6 +147,6 @@ app = {
 		app.fetchData();
 	}
 
-} // end app
+} // end app!
 
 window.onload = app.init;
