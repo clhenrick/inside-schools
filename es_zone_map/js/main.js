@@ -1,6 +1,8 @@
 app = {
 	map : null,
 	esZones : null,
+	schools : null,
+	marker : null,
 	data : null,
 	target: null,
 
@@ -29,18 +31,23 @@ app = {
 	},
 
 	fetchData: function(){
-		$.getJSON('./ES_Zones_2013-2014.geojson', function(data){
-			//console.log('./ES_Zones_2013-2014.geojson: ', data);
+		$.getJSON('./data/ES_Zones_2013-2014.geojson', function(data){
+			console.log('./ES_Zones_2013-2014.geojson: ', data);
 			app.data = data;
-			//console.log('app.data: ', data);
 			app.parseData(data);
 		});
+
+		$.getJSON('./data/ny_pub_schools_query2.geojson', function(data){
+			console.log('schools: ', data);
+			app.parseDataToo(data);
+		})
 	},
 
 	parseData: function(data){
-		var geojson = data;
-		console.log('parseData data: ', data);
-		var features = geojson.features;
+		app.esZones = L.geoJson(data, {style: app.style}).addTo(app.map);
+		//console.log('parseData data: ', data);
+		//console.log('esZones: ', app.esZones);
+		var features = data.features;
 		var len = features.length;
 		var i=0;
 		var labels, coordinates;
@@ -50,17 +57,10 @@ app = {
 			labels = features[i].properties.Label;
 			coordinates = features[i].geometry.coordinates[0];
 			// *** variable for db query, this will be dynamic later ***
-			app.target = "321";
 
 			// query features by zone id
 			if (labels === app.target) {
-				console.log("i: ", i);
-				// console.log("PS305 coordinates[0]: ", coordinates);
-
-				// add and style esZones
-				app.esZones = L.geoJson(app.data, {style: app.dStyle}).addTo(app.map);
-				app.initGeoJson(app.target);
-				//app.fitBounds();
+				//console.log('sel feature: ', features);
 
 				// grab bounding box coordinates
 				var right = Math.max.apply(Math, coordinates.map(function(k) {
@@ -93,26 +93,39 @@ app = {
 		}
 	},
 
-	initGeoJson : function(n) {
-	    console.log(app.esZones.options);
-	    app.map.removeLayer(app.esZones);
-	    if (n != "") {
-	        sn = n;
-	        console.log(sn);
-	        geojson = L.geoJson(app.data, {
-	            style: app.style
-	        }).addTo(app.map);
-	    }
+	parseDataToo : function(data){
+		var i = 0,
+			features = data.features,
+			len = data.features.length,
+			num, lat, lon,
+			popUp = {
+				closeButton : false,
+				closeOnClick: false,
+				maxHeight : 50,
+				maxWidth: 45
+			};
+
+		for (i; i<len; i++){
+			num = features[i].properties.number;
+			lat = features[i].properties.lat;
+			lon = features[i].properties.lon;
+
+			if (num === app.target) {
+				app.schools = L.marker([lat, lon]).addTo(app.map);
+				app.schools.bindPopup("<b>" + num + "</b>", popUp).openPopup();
+			}
+		}
+		
+		//app.schools = L.geoJson(data).addTo(app.map);
 	},
 
-    style : function(feature) {
-        if (app.target === feature.properties.Label) {
-            return app.hStyle;
-            
-        } else {
-            return app.dStyle;
-        }
-    },
+	style : function(feature){
+		switch(feature.properties.Label) {
+			case app.target : return app.hStyle;
+				break;
+			default : return app.dStyle;								
+		}
+	},
 
 	zoomToLayer : function(sw, ne) {
 		app.map.fitBounds([sw, ne], { padding: [10,10] });
@@ -139,14 +152,15 @@ app = {
 	    opacity: 1,
 	    dashArray: "3 ,7",
 	    fillOpacity: 0.1,
-	    fillColor: '#0000ff'
+	    fillColor: '#0066cc'
 	},
 
-	init : function(){
+	init : function(dbn){
+		app.target = dbn;		
 		app.renderMap();
 		app.fetchData();
 	}
 
 } // end app!
 
-window.onload = app.init;
+window.onload = app.init('321');
