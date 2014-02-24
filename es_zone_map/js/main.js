@@ -4,7 +4,7 @@ app = {
 	schools : null,
 	marker : null,
 	data : null,
-	target: null,
+	target: "",
 
 	renderMap : function(){
 
@@ -50,16 +50,16 @@ app = {
 		var features = data.features;
 		var len = features.length;
 		var i=0;
-		var labels, coordinates;
+		var dbn, coordinates;
 
 		// loop through school zone geojson features
 		for (i; i<len; i++){
-			labels = features[i].properties.Label;
+			dbn = features[i].properties.DBN;
 			coordinates = features[i].geometry.coordinates[0];
 			// *** variable for db query, this will be dynamic later ***
 
 			// query features by zone id
-			if (labels === app.target) {
+			if (dbn === app.target) {
 				//console.log('sel feature: ', features);
 
 				// grab bounding box coordinates
@@ -120,7 +120,7 @@ app = {
 	},
 
 	style : function(feature){
-		switch(feature.properties.Label) {
+		switch(feature.properties.DBN) {
 			case app.target : return app.hStyle;
 				break;
 			default : return app.dStyle;								
@@ -163,4 +163,4 @@ app = {
 
 } // end app!
 
-window.onload = app.init('321');
+window.onload = app.init("15K321");
