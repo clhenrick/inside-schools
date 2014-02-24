@@ -31,16 +31,16 @@ app = {
 	},
 
 	fetchData: function(){
+		$.getJSON('./data/ny_pub_schools_query2.geojson', function(data){
+			console.log('schools: ', data);
+			app.parseDataToo(data);
+		})
+
 		$.getJSON('./data/ES_Zones_2013-2014.geojson', function(data){
 			console.log('./ES_Zones_2013-2014.geojson: ', data);
 			app.data = data;
 			app.parseData(data);
 		});
-
-		$.getJSON('./data/ny_pub_schools_query2.geojson', function(data){
-			console.log('schools: ', data);
-			app.parseDataToo(data);
-		})
 	},
 
 	parseData: function(data){
