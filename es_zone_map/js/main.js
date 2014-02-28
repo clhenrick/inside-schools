@@ -4,7 +4,7 @@ app = {
 	schools : null,
 	marker : null,
 	data : null,
-	target: "",
+	target: null,
 
 	renderMap : function(){
 
@@ -31,16 +31,16 @@ app = {
 	},
 
 	fetchData: function(){
-		$.getJSON('./data/ny_pub_schools_query2.geojson', function(data){
-			console.log('schools: ', data);
-			app.parseDataToo(data);
-		})
-
 		$.getJSON('./data/ES_Zones_2013-2014.geojson', function(data){
-			console.log('./ES_Zones_2013-2014.geojson: ', data);
+			console.log('./ES_Zones_2013-2014.geojson loaded: ', data);
 			app.data = data;
 			app.parseData(data);
 		});
+
+		$.getJSON('./data/public_school_points.geojson', function(data){
+			console.log('schools loaded: ', data);
+			app.parseDataToo(data);
+		})
 	},
 
 	parseData: function(data){
@@ -97,22 +97,25 @@ app = {
 		var i = 0,
 			features = data.features,
 			len = data.features.length,
-			num, lat, lon,
+			num, ats, lat, lon,
 			popUp = {
 				closeButton : false,
 				closeOnClick: false,
-				maxHeight : 50,
-				maxWidth: 45
+				// maxHeight : 50,
+				// maxWidth: 45
 			};
 
 		for (i; i<len; i++){
-			num = features[i].properties.number;
-			lat = features[i].properties.lat;
-			lon = features[i].properties.lon;
+			ats = features[i].properties.ATS_CODE;
+			name = features[i].properties.SCHOOLNAME;
+			lat = features[i].properties.YCOORD;
+			lon = features[i].properties.XCOORD;
 
-			if (num === app.target) {
+			console.log('ats: ', ats, ' name: ', name, ' lat: ', lat, 'lon: ', lon);
+
+			if (ats == app.target) {
 				app.schools = L.marker([lat, lon]).addTo(app.map);
-				app.schools.bindPopup("<b>" + num + "</b>", popUp).openPopup();
+				app.schools.bindPopup("<b>" + name + "</b>", popUp).openPopup();
 			}
 		}
 		
@@ -143,15 +146,15 @@ app = {
 	    opacity: 1,
 	    dashArray: "3, 7",
 	    fillOpacity: 0.3,
-	    fillColor: "#fce305"
+	    fillColor: "#0066cc"
 	},
 
 	dStyle: {
-		weight: 1,
+		weight: 0,
 	    color: "#666666",
-	    opacity: 1,
+	    opacity: 0,
 	    dashArray: "3 ,7",
-	    fillOpacity: 0.1,
+	    fillOpacity: 0,
 	    fillColor: '#0066cc'
 	},
 
@@ -163,4 +166,4 @@ app = {
 
 } // end app!
 
-window.onload = app.init("15K321");
+window.onload = app.init("15K131");
