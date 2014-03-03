@@ -141,11 +141,11 @@ app = {
 	},
 
 	hStyle : {
-	    color: "#666666",
-	    weight: 1,
-	    opacity: 1,
-	    dashArray: "3, 7",
-	    fillOpacity: 0.3,
+	    color: "#0066cc",
+	    weight: 3,
+	    opacity: .7,
+	    // dashArray: "",
+	    fillOpacity: 0.2,
 	    fillColor: "#0066cc"
 	},
 
