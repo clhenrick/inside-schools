@@ -9,7 +9,7 @@ app = {
 	renderMap : function(){
 
 		var config = {
-			mapBoxBaseLayer: 'chenrick.map-3gzk4pem',
+			mapBoxBaseLayer: 'inside-schools.heafm0kb',
 			maxBounds: new L.LatLngBounds([40.4378,-74.3342], [40.9635,-73.6008]),
 			minZoom: 12,
 			maxZoom: 16,
@@ -111,7 +111,7 @@ app = {
 			lat = features[i].properties.YCOORD;
 			lon = features[i].properties.XCOORD;
 
-			console.log('ats: ', ats, ' name: ', name, ' lat: ', lat, 'lon: ', lon);
+			//console.log('ats: ', ats, ' name: ', name, ' lat: ', lat, 'lon: ', lon);
 
 			if (ats == app.target) {
 				app.schools = L.marker([lat, lon]).addTo(app.map);
