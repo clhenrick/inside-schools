@@ -142,7 +142,7 @@ app = {
 
 	hStyle : {
 	    color: "#0066cc",
-	    weight: 3,
+	    weight: 1.5,
 	    opacity: .7,
 	    // dashArray: "",
 	    fillOpacity: 0.2,
