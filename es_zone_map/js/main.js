@@ -41,19 +41,22 @@ app = {
 			// app.parseData(data);
 			app.esZones = L.geoJson(data, {
 				style: app.style,
-				onEachFeature: app.onEachZone
+				onEachFeature: app.onEachFeature
 			} ).addTo(app.map);
+		})
+		.done(function(){
+			// when data is finished loading
+			// fit lat lon bounds of layerGroup to map
+			app.map.fitBounds(app.group.getBounds());
 		});
 
 		$.getJSON('./data/public_school_points.geojson', function(data){
 			console.log('schools loaded: ', data);
-			app.parseDataToo(data);
-			// zoom to layergroup
-			app.map.fitBounds(app.group.getBounds());
+			app.parseData(data);
 		});
 	},
 
-	onEachZone : function(feature, layer){
+	onEachFeature : function(feature, layer){
 		// loop over geoJson features
 		// append features to layerGroup that match dbn
 		var dbn = feature.properties.DBN,
@@ -61,73 +64,16 @@ app = {
 		if (dbn !== null) {
 			if (dbn.indexOf(app.target) !== -1) {
 				//app.group.addLayer(feature);
-				console.log("featue(s): ", feature);
+				//console.log("featue(s): ", feature);
 				zone = new L.polygon(feature).toGeoJSON();
 				app.group.addLayer(layer);
+
 				console.log('zone: ', zone, ' layer: ', layer);
 			}
 		}
 	},
 
-	parseData: function(data){
-		app.esZones = L.geoJson(data, {
-			style: app.style,
-			onEachFeature: app.onEachZone
-			} ).addTo(app.map);
-		//console.log('parseData data: ', data);
-		//console.log('esZones: ', app.esZones);
-		var features = data.features;
-		var len = features.length;
-		var i=0;
-		var dbn, coordinates;
-
-		// loop through school zone geojson features
-		for (i; i<len; i++){
-			dbn = features[i].properties.DBN;
-			coordinates = features[i].geometry.coordinates[0];
-			// *** variable for db query, this will be dynamic later ***
-
-			// test for null values
-			if (dbn !== null){
-			// query features by zone id
-				if (dbn.indexOf(app.target) !== -1) {
-					//console.log('sel feature: ', features);
-
-					//app.group.addLayer(features[i]);
-
-					// grab bounding box coordinates
-					var right = Math.max.apply(Math, coordinates.map(function(k) {
-							return k[0];
-						})),
-
-						left = Math.min.apply(Math, coordinates.map(function(k){
-							return k[0];
-						})),
-
-						top = Math.max.apply(Math, coordinates.map(function(k){
-							return k[1];
-						})),
-
-						bottom = Math.min.apply(Math, coordinates.map(function(k){
-							return k[1];
-						}));
-
-					// set arrarys for lower left and upper right 
-					var southWest = [bottom, left],
-						northEast = [top, right];
-
-					// debug
-					console.log('left: ', left, ' top: ', top, ' right: ', right, ' bottom: ', bottom);
-					console.log('southWest: ', southWest, ' northEast: ', northEast);
-
-					// zoom to bounding box
-					app.zoomToLayer(southWest, northEast);
-				}
-			}
-		}
-	},
-
-	parseDataToo : function(data){
+	parseData : function(data){
 		var i = 0,
 			features = data.features,
 			len = data.features.length,
@@ -148,31 +94,23 @@ app = {
 			//console.log('ats: ', ats, ' name: ', name, ' lat: ', lat, 'lon: ', lon);
 
 			if (ats == app.target) {
-				app.schools = L.marker([lat, lon]).addTo(app.map);
+				app.schools = L.marker([lat, lon]);
 				app.group.addLayer(app.schools);
 				app.schools.bindPopup("<b>" + name + "</b>", popUp).openPopup();
 			}
 		}
-		
-		//app.schools = L.geoJson(data).addTo(app.map);
 	},
 
 	style : function(feature){
-		switch(feature.properties.DBN) {
-			case app.target : return app.hStyle;
+		if (feature.properties.DBN !== null){
+			switch(feature.properties.DBN.indexOf(app.target)) {
+			case -1 : return app.dStyle;
 				break;
-			default : return app.dStyle;								
-		}
-	},
-
-	zoomToLayer : function(sw, ne) {
-		app.map.fitBounds([sw, ne], { padding: [10,10] });
-	},
-
-	fitBounds: function(featureGroup){
-		var bounds = featureGroup.getBounds();
-		console.log('bounds: ', bounds);
-		app.map.fitBounds(bounds, { padding: [10,10] });
+			default : return app.hStyle;								
+			}
+		} else if (feature.properties.DBN === null){
+			return app.dStyle;
+			}
 	},
 
 	hStyle : {
@@ -199,6 +137,6 @@ app = {
 		app.fetchData();
 	}
 
-} // end app!
+} 
 
-window.onload = app.init("15K131");
+window.onload = app.init("30Q127");
