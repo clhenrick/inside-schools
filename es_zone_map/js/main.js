@@ -5,6 +5,7 @@ app = {
 	marker : null,
 	data : null,
 	target: null,
+	group : null,
 
 	renderMap : function(){
 
@@ -27,24 +28,52 @@ app = {
 		this.map.doubleClickZoom.disable();
 		this.map.scrollWheelZoom.disable();
 		// disable tap handler, if present.
-		if (this.map.tap) this.map.tap.disable();		
+		if (this.map.tap) this.map.tap.disable();
+
+		this.group = new L.featureGroup().addTo(this.map);
+		//console.log('this group: ', this.group);
 	},
 
 	fetchData: function(){
 		$.getJSON('./data/ES_Zones_2013-2014.geojson', function(data){
 			console.log('./ES_Zones_2013-2014.geojson loaded: ', data);
-			app.data = data;
-			app.parseData(data);
+			// app.data = data;
+			// app.parseData(data);
+			app.esZones = L.geoJson(data, {
+				style: app.style,
+				onEachFeature: app.onEachZone
+			} ).addTo(app.map);
 		});
 
 		$.getJSON('./data/public_school_points.geojson', function(data){
 			console.log('schools loaded: ', data);
 			app.parseDataToo(data);
-		})
+			// zoom to layergroup
+			app.map.fitBounds(app.group.getBounds());
+		});
+	},
+
+	onEachZone : function(feature, layer){
+		// loop over geoJson features
+		// append features to layerGroup that match dbn
+		var dbn = feature.properties.DBN,
+			zone;
+		if (dbn !== null) {
+			if (dbn.indexOf(app.target) !== -1) {
+				//app.group.addLayer(feature);
+				console.log("featue(s): ", feature);
+				zone = new L.polygon(feature).toGeoJSON();
+				app.group.addLayer(layer);
+				console.log('zone: ', zone, ' layer: ', layer);
+			}
+		}
 	},
 
 	parseData: function(data){
-		app.esZones = L.geoJson(data, {style: app.style}).addTo(app.map);
+		app.esZones = L.geoJson(data, {
+			style: app.style,
+			onEachFeature: app.onEachZone
+			} ).addTo(app.map);
 		//console.log('parseData data: ', data);
 		//console.log('esZones: ', app.esZones);
 		var features = data.features;
@@ -58,37 +87,42 @@ app = {
 			coordinates = features[i].geometry.coordinates[0];
 			// *** variable for db query, this will be dynamic later ***
 
+			// test for null values
+			if (dbn !== null){
 			// query features by zone id
-			if (dbn === app.target) {
-				//console.log('sel feature: ', features);
+				if (dbn.indexOf(app.target) !== -1) {
+					//console.log('sel feature: ', features);
 
-				// grab bounding box coordinates
-				var right = Math.max.apply(Math, coordinates.map(function(k) {
-						return k[0];
-					})),
+					//app.group.addLayer(features[i]);
 
-					left = Math.min.apply(Math, coordinates.map(function(k){
-						return k[0];
-					})),
+					// grab bounding box coordinates
+					var right = Math.max.apply(Math, coordinates.map(function(k) {
+							return k[0];
+						})),
 
-					top = Math.max.apply(Math, coordinates.map(function(k){
-						return k[1];
-					})),
+						left = Math.min.apply(Math, coordinates.map(function(k){
+							return k[0];
+						})),
 
-					bottom = Math.min.apply(Math, coordinates.map(function(k){
-						return k[1];
-					}));
+						top = Math.max.apply(Math, coordinates.map(function(k){
+							return k[1];
+						})),
 
-				// set arrarys for lower left and upper right 
-				var southWest = [bottom, left],
-					northEast = [top, right];
+						bottom = Math.min.apply(Math, coordinates.map(function(k){
+							return k[1];
+						}));
 
-				// debug
-				console.log('left: ', left, ' top: ', top, ' right: ', right, ' bottom: ', bottom);
-				console.log('southWest: ', southWest, ' northEast: ', northEast);
+					// set arrarys for lower left and upper right 
+					var southWest = [bottom, left],
+						northEast = [top, right];
 
-				// zoom to bounding box
-				app.zoomToLayer(southWest, northEast);
+					// debug
+					console.log('left: ', left, ' top: ', top, ' right: ', right, ' bottom: ', bottom);
+					console.log('southWest: ', southWest, ' northEast: ', northEast);
+
+					// zoom to bounding box
+					app.zoomToLayer(southWest, northEast);
+				}
 			}
 		}
 	},
@@ -115,6 +149,7 @@ app = {
 
 			if (ats == app.target) {
 				app.schools = L.marker([lat, lon]).addTo(app.map);
+				app.group.addLayer(app.schools);
 				app.schools.bindPopup("<b>" + name + "</b>", popUp).openPopup();
 			}
 		}
@@ -134,8 +169,8 @@ app = {
 		app.map.fitBounds([sw, ne], { padding: [10,10] });
 	},
 
-	fitBounds: function(geojson){
-		var bounds = geojson.getBounds();
+	fitBounds: function(featureGroup){
+		var bounds = featureGroup.getBounds();
 		console.log('bounds: ', bounds);
 		app.map.fitBounds(bounds, { padding: [10,10] });
 	},
