@@ -34,7 +34,21 @@ app = {
 		//console.log('this group: ', this.group);
 	},
 
+	checkGroup : function(){
+		var groupLayers = app.group.getLayers(),
+			len = groupLayers.length;
+
+		console.log('layer group length: ', len);
+
+		if (len > 0) {
+			app.group.clearLayers();
+		}
+	},	
+
 	fetchData: function(){
+
+		app.checkGroup();
+
 		$.getJSON('./data/ES_Zones_2013-2014.geojson', function(data){
 			console.log('./ES_Zones_2013-2014.geojson loaded: ', data);
 			// app.data = data;
