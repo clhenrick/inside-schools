@@ -152,5 +152,3 @@ app = {
 	}
 
 } 
-
-window.onload = app.init("20K069");
